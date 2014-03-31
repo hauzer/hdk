@@ -56,6 +56,12 @@ if !FileExist(IniFile) {
     skill4_h = r
     skill5_h = d
     skill6_h = f
+    skill1ac_h = ^q
+    skill2ac_h = ^w
+    skill3ac_h = ^e
+    skill4ac_h = ^r
+    skill5ac_h = ^d
+    skill6ac_h = ^f
     inv1_h = !q
     inv2_h = !w
     inv3_h = !e
@@ -73,6 +79,11 @@ if !FileExist(IniFile) {
     }
     Loop, 6
     {
+        skillac_h := skill%A_Index%ac_h
+        IniWrite, %skillac_h%, %IniFile%, Hotkeys, Skill%A_Index%AutoCast
+    }
+    Loop, 6
+    {
         inv_h := inv%A_Index%_h
         IniWrite, %inv_h%, %IniFile%, Hotkeys, Inventory%A_Index%
     }
@@ -84,6 +95,7 @@ else {
     Loop, 6
     {
         IniRead, skill%A_Index%_h, %IniFile%, Hotkeys, Skill%A_Index%
+        IniRead, skill%A_Index%ac_h, %IniFile%, Hotkeys, Skill%A_Index%AutoCast
         IniRead, inv%A_Index%_h, %IniFile%, Hotkeys, Inventory%A_Index%
     }
     IniRead, board_h, %IniFile%, Hotkeys, Board
@@ -94,16 +106,21 @@ else {
 Hotkey, $*%pause_h%, UserPauseScript
 Loop, 6
 {
-    inv_h :=inv%A_Index%_h
-    Hotkey, $%inv_h%, Inventory
-    Hotkey, $+%inv_h%, Inventory
-
     skill_h := skill%A_Index%_h
     Hotkey, $%skill_h%, Skill
     Hotkey, $+%skill_h%, Skill
+
+    skillac_h := skill%A_Index%ac_h
+    Hotkey, $%skillac_h%, SkillAutoCast
+    Hotkey, $+%skillac_h%, SkillAutoCast
+
+    inv_h :=inv%A_Index%_h
+    Hotkey, $%inv_h%, Inventory
+    Hotkey, $+%inv_h%, Inventory
 }
 Hotkey, $*%board_h%, Board
 
+do_autocast = 
 is_paused = 0
 pause_key = 
 is_suspended = 0
@@ -129,13 +146,17 @@ return
 DisableHotkeys:
     Loop, 6
     {
-        inv_h :=inv%A_Index%_h
-        Hotkey, $%inv_h%, Off
-        Hotkey, $+%inv_h%, Off
-
         skill_h := skill%A_Index%_h
         Hotkey, $%skill_h%, Off
         Hotkey, $+%skill_h%, Off
+
+        skillac_h := skill%A_Index%ac_h
+        Hotkey, $%skillac_h%, Off
+        Hotkey, $+%skillac_h%, Off
+
+        inv_h :=inv%A_Index%_h
+        Hotkey, $%inv_h%, Off
+        Hotkey, $+%inv_h%, Off
     }
     Hotkey, $*%board_h%, Off
 return
@@ -143,13 +164,17 @@ return
 EnableHotkeys:
     Loop, 6
     {
-        inv_h :=inv%A_Index%_h
-        Hotkey, $%inv_h%, On
-        Hotkey, $+%inv_h%, On
-
         skill_h := skill%A_Index%_h
         Hotkey, $%skill_h%, On
         Hotkey, $+%skill_h%, On
+
+        skillac_h := skill%A_Index%ac_h
+        Hotkey, $%skillac_h%, On
+        Hotkey, $+%skillac_h%, On
+
+        inv_h :=inv%A_Index%_h
+        Hotkey, $%inv_h%, On
+        Hotkey, $+%inv_h%, On
     }
     Hotkey, $*%board_h%, On
 return
@@ -294,13 +319,19 @@ Skill:
         skill_y = %skill5_y%
     }
 
-    send_string := "{Click " . skill_x . "," . skill_y . "}"
+    send_string := "{Click " . do_autocast . " " . skill_x . "," . skill_y . "}"
+    do_autocast = 
     IfInString, A_ThisHotkey, +
     {
         send_string := "+" . send_string
     }
     SendPlay, %send_string%
     SendPlay, {Click, %mouse_x%, %mouse_y%, 0}
+return
+
+SkillAutoCast:
+    do_autocast = right
+    gosub Skill
 return
 
 Board:
