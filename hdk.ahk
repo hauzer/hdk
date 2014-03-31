@@ -33,10 +33,6 @@ Menu, Tray, Tip, Hauzer's Dota Keys
 ; Retrieve the resolution of Warcraft III. If the same isn't present in the registry, use the desktop resolution.
 RegRead, wc3w, HKEY_CURRENT_USER, Software\Blizzard Entertainment\Warcraft III\Video, reswidth
 RegRead, wc3h, HKEY_CURRENT_USER, Software\Blizzard Entertainment\Warcraft III\Video, resheight
-if (ErrorLevel == 1) {
-    wc3w = A_ScreenWidth
-    wc3h = A_ScreenHeight
-}
 
 ; In my tests, I concluded that some clicks may not work because they actually click "inbetween" pixels,
 ; making the game unable to detect them! The solution is simply to round the coordinates.
@@ -110,17 +106,18 @@ Loop, 6
 Hotkey, *%board_h%, Board
 
 ; Set up a routine, and needed variables, which will check if the user is playing DotA
-playing := 0
+RegRead, gamma, HKEY_CURRENT_USER, Software\Blizzard Entertainment\Warcraft III\Video, gamma
+is_playing := 0
 check_x1 := round(wc3w * 0.68375)
 check_y1 := round(wc3h * 0.006)
 check_x2 := round(wc3w * 0.70375)
 check_y2 := round(wc3h * 0.0316)
-check_color = 0xC2B80F
-check_color_variation = 30
-checks_failed = 0
-SetTimer, CheckIfPlaying, 500
+check_color := 0xC2B80F + (gamma * 0x10000) + (gamma * 0x100) + gamma
+check_color_variation := 30
+checks_failed := 0
+SetTimer, CheckIfPlaying, 1000
 
-SetTimer, UpdateState, 100
+SetTimer, UpdateState, 300
 
 is_paused = 0
 pause_key = 
@@ -189,7 +186,7 @@ CheckIfPlaying:
     }
     else if((ErrorLevel = 1) && (is_playing != 0))
     {
-        if(checks_failed >= 6)
+        if(checks_failed >= 4)
         {
             checks_failed = 0
             is_playing = 0
@@ -292,6 +289,11 @@ return
 UserPauseScript:
     Suspend, Permit
 
+    if(is_playing = 0)
+    {
+        return
+    }
+
     if(is_paused = 0)
     {
         pause_keys := "Enter," . pause_h
@@ -311,6 +313,8 @@ UserPauseScript:
     
         IfInString, pause_key, Enter
         {
+            SendInput, {Esc}
+
             unpause_keys = Enter,Esc,LButton
             Loop, Parse, unpause_keys, `,
             {
