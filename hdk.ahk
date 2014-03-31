@@ -233,6 +233,7 @@ CheckIfPlaying:
         if(is_playing = 0)
         {
             is_playing = 1
+            SendInput, {Enter}Hauzer's Dota Keys activated.{Enter}
             SendInput, %auto_text%
             gosub UnpauseScript
         }
