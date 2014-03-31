@@ -18,7 +18,6 @@
 ;--------------------------;
 ;----------Entry-----------;
 ;--------------------------;
-#IfWinActive Warcraft III
 #Persistent
 #SingleInstance force
 #NoEnv
@@ -92,19 +91,22 @@ else {
 }
 
 ; Setup hotkeys.
-Hotkey, *%pause_h%, UserPauseScript
+Hotkey, $*%pause_h%, UserPauseScript
 Loop, 6
 {
     inv_h :=inv%A_Index%_h
-    Hotkey, %inv_h%, Inventory
-    Hotkey, +%inv_h%, Inventory
+    Hotkey, $%inv_h%, Inventory
+    Hotkey, $+%inv_h%, Inventory
 
     skill_h := skill%A_Index%_h
-    Hotkey, %skill_h%, Skill
-    Hotkey, +%skill_h%, Skill
+    Hotkey, $%skill_h%, Skill
+    Hotkey, $+%skill_h%, Skill
 }
-Hotkey, *%board_h%, Board
+Hotkey, $*%board_h%, Board
 
+is_paused = 0
+pause_key = 
+is_suspended = 0
 ; Set up a routine, and needed variables, which will check if the user is playing DotA
 RegRead, gamma, HKEY_CURRENT_USER, Software\Blizzard Entertainment\Warcraft III\Video, gamma
 is_playing := 0
@@ -115,47 +117,74 @@ check_y2 := round(wc3h * 0.0316)
 check_color := 0xC2B80F + (gamma * 0x10000) + (gamma * 0x100) + gamma
 check_color_variation := 30
 checks_failed := 0
-SetTimer, CheckIfPlaying, 1000
 
-SetTimer, UpdateState, 300
-
-is_paused = 0
-pause_key = 
+SetTimer, UpdateState, 300 
+SetTimer, CheckIfPlaying, 500
 
 return
 
 ;--------------------------;
 ;------Functionality-------;
 ;--------------------------;
+DisableHotkeys:
+    Loop, 6
+    {
+        inv_h :=inv%A_Index%_h
+        Hotkey, $%inv_h%, Off
+        Hotkey, $+%inv_h%, Off
+
+        skill_h := skill%A_Index%_h
+        Hotkey, $%skill_h%, Off
+        Hotkey, $+%skill_h%, Off
+    }
+    Hotkey, $*%board_h%, Off
+return
+
+EnableHotkeys:
+    Loop, 6
+    {
+        inv_h :=inv%A_Index%_h
+        Hotkey, $%inv_h%, On
+        Hotkey, $+%inv_h%, On
+
+        skill_h := skill%A_Index%_h
+        Hotkey, $%skill_h%, On
+        Hotkey, $+%skill_h%, On
+    }
+    Hotkey, $*%board_h%, On
+return
+
 SuspendScript:
+    is_suspended = 1
     SetTimer, CheckIfPlaying, Off
-    Suspend, On
+    Hotkey, $*%pause_h%, Off
+    gosub DisableHotkeys
 return
 
 UnsuspendScript:
-    if(is_paused = 1)
-    {
-        return
-    }
-
+    is_suspended = 0
     SetTimer, CheckIfPlaying, On
-    Suspend, Off
+    Hotkey, $*%pause_h%, On
+    if(is_paused = 0)
+    {
+        gosub EnableHotkeys
+    }
 return
 
 PauseScript:
     is_paused = 1
     SetScrollLockState, AlwaysOff
-    Suspend, On
+    gosub DisableHotkeys
 return
 
 UnpauseScript:
     is_paused = 0
     SetScrollLockState, AlwaysOn
-    Suspend, Off
+    gosub EnableHotkeys
 return
 
 UpdateState:
-    if(A_IsSuspended = 0)
+    if(is_suspended = 0)
     {
         IfWinNotActive Warcraft III
         {
@@ -176,17 +205,16 @@ CheckIfPlaying:
     if(ErrorLevel = 0)
     {
         checks_failed = 0
-        if(is_playing != 1)
+        if(is_playing = 0)
         {
             is_playing = 1
-            is_user_paused = 0
-            gosub UnpauseScript
             SendInput, %auto_text%
+            gosub UnpauseScript
         }
     }
-    else if((ErrorLevel = 1) && (is_playing != 0))
+    else if(ErrorLevel = 1)
     {
-        if(checks_failed >= 4)
+        if(checks_failed >= 6)
         {
             checks_failed = 0
             is_playing = 0
@@ -287,8 +315,6 @@ return
 ~*LButton::
 ~*Esc::
 UserPauseScript:
-    Suspend, Permit
-
     if(is_playing = 0)
     {
         return
