@@ -1,0 +1,23 @@
+v2.3.1:
+ - Added a message upon script activation. This is done to popularize it.
+
+v2.3:
+ - Added autocast hotkeys.
+
+v2.2:
+ - Rooted out some serious bugs related to hotkeys handling.
+
+v2.1:
+ - Greatly improved DotA detection. It should now work at all times.
+ - Small improvements.
+
+v2.0:
+ - Added a leaderboard hotkey.
+ - DotA is now automatically detected, which brings many new features.
+ - Improved chat integration.
+
+v1.2:
+ - Added the ability to customize hotkeys.
+
+v0.4:
+ - The first version with the most basic features.
